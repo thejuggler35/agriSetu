@@ -177,6 +177,11 @@ export interface WhisperQueryResponse {
   keyActionPoints: string[];
   category: 'crop_advisory' | 'fertilizer' | 'pest_disease' | 'weather_irrigation' | 'market_general';
   suggestedFollowUps?: string[];
+  detectedCrop?: string;
+  detectedTopic?: string;
+  severity?: 'low' | 'moderate' | 'high' | 'critical';
+  confidencePercent?: number;
+  searchKeywords?: string[];
   timestamp: string;
   meta?: {
     modelUsed: string;

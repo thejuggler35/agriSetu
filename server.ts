@@ -1513,6 +1513,26 @@ function generateLocalWhisperAnswer(
   let audioText = '';
   let keyActionPoints: string[] = [];
   let suggestedFollowUps: string[] = [];
+  let detectedTopic = 'Integrated Agronomy Advisory';
+  let severity: 'low' | 'moderate' | 'high' | 'critical' = 'moderate';
+
+  // Crop detection
+  let detectedCrop = crop || '';
+  if (!detectedCrop || detectedCrop === 'General Cropping') {
+    if (q.includes('गेहूं') || q.includes('गेंहू') || q.includes('wheat')) detectedCrop = 'Wheat';
+    else if (q.includes('धान') || q.includes('चावल') || q.includes('rice') || q.includes('paddy')) detectedCrop = 'Rice';
+    else if (q.includes('कपास') || q.includes('cotton') || q.includes('नरमा')) detectedCrop = 'Cotton';
+    else if (q.includes('सरसों') || q.includes('mustard') || q.includes('राया')) detectedCrop = 'Mustard';
+    else if (q.includes('टमाटर') || q.includes('tomato')) detectedCrop = 'Tomato';
+    else if (q.includes('आलू') || q.includes('potato')) detectedCrop = 'Potato';
+    else if (q.includes('मिर्च') || q.includes('chilli') || q.includes('chili')) detectedCrop = 'Chilli';
+    else if (q.includes('चना') || q.includes('chickpea') || q.includes('gram')) detectedCrop = 'Chickpea';
+    else if (q.includes('मक्का') || q.includes('maize') || q.includes('corn')) detectedCrop = 'Maize';
+    else if (q.includes('गन्ना') || q.includes('sugarcane')) detectedCrop = 'Sugarcane';
+    else if (q.includes('प्याज') || q.includes('onion')) detectedCrop = 'Onion';
+    else if (q.includes('सोयाबीन') || q.includes('soybean')) detectedCrop = 'Soybean';
+    else detectedCrop = districtObj?.major_crops?.[0] || 'Wheat';
+  }
 
   // 1. Urea Application, Nitrogen & Top-Dressing (यूरिया कब और कितना डालें)
   if (
@@ -1527,6 +1547,8 @@ function generateLocalWhisperAnswer(
     (q.includes('खाद कब') && !q.includes('जीवामृत'))
   ) {
     category = 'fertilizer';
+    detectedTopic = 'Urea & Nitrogen Top-Dressing (यूरिया प्रबंधन)';
+    severity = 'moderate';
     if (isHi) {
       response = `गेहूं एवं अन्य खाद्यान्न फसलों में यूरिया (नाइट्रोजन) का प्रयोग 2 से 3 विभाजित खुराकों (Split Application) में करना चाहिए:\n\n1. पहली खुराक (बुवाई के समय - बेसल डोज): कुल नाइट्रोजन की एक तिहाई मात्रा (लगभग 25-30 किग्रा यूरिया प्रति एकड़) बुवाई के समय डीएपी या पोटाश के साथ दें।\n2. दूसरी खुराक (पहले पानी पर - CRI अवस्था): बुवाई के 20-25 दिन बाद पहला पानी लगाने के 2-3 दिन बाद, जब खेत में पैर टिकने लगे (ओट आ जाए), तब 40-45 किग्रा नीम लेपित यूरिया प्रति एकड़ की दर से टॉप-ड्रेसिंग करें।\n3. तीसरी खुराक (कल्ले फूटते समय): बुवाई के 40-45 दिन बाद बची हुई एक तिहाई मात्रा डालें।\n\nविशेष सुझाव: यदि जमीन में भारी यूरिया नहीं डालना चाहते हैं, तो फूल आने से पहले 4 मिली नैनो यूरिया प्रति लीटर पानी में मिलाकर पत्तियों पर छिड़काव करें। बारिश से ठीक पहले यूरिया कभी न डालें।`;
       audioText = `किसान भाई, गेहूं में यूरिया को तीन भागों में दें। पहली खुराक बुवाई के समय, दूसरी पहले पानी के बाद 20 से 25 दिन पर, और तीसरी कल्ले फूटते समय 45 दिन पर डालें। हमेशा खेत में नमी होने पर ही यूरिया डालें।`;
@@ -2043,10 +2065,125 @@ function generateLocalWhisperAnswer(
       ];
     }
   }
-  // 15. Default Crop & Agronomy Consultation (विस्तृत विशेषज्ञ परामर्श)
+  // 15. Mustard Crop Management & Oil Content (सरसों की खेती, सफेद रतुआ, सल्फर)
+  else if (
+    q.includes('सरसों') ||
+    q.includes('mustard') ||
+    q.includes('राया') ||
+    q.includes('तोरिया')
+  ) {
+    category = 'crop_advisory';
+    detectedTopic = 'Mustard Yield, Sulphur & Disease Management (सरसों उत्पादन व रोग)';
+    severity = 'moderate';
+    detectedCrop = 'Mustard';
+    if (isHi) {
+      response = `सरसों की फसल में अधिक पैदावार और दानों में 40% से अधिक तेल की मात्रा प्राप्त करने के लिए वैज्ञानिक सिफारिशें:\n\n1. सल्फर (गंधक) का प्रयोग: सरसों एक तिलहनी फसल है जिसे सल्फर की बहुत आवश्यकता होती है। बुवाई के समय या पहले पानी पर 25 से 30 किग्रा बेंटोनाइट सल्फर (90% दाल रूपी) प्रति एकड़ अवश्य डालें। यह तेल की मात्रा 3-4% बढ़ा देता है।\n2. सफेद रतुआ / फफूंद (White Rust / Albugo candida): पत्तियों के नीचे सफेद उभरे हुए छाले दिखने पर रिडोमिल गोल्ड (Metalaxyl + Mancozeb) 2.5 ग्राम/लीटर या मैंकोजेब 75% WP 2 ग्राम/लीटर का छिड़काव करें।\n3. पाला (Frost) से बचाव: दिसंबर-जनवरी में जब तापमान 4°C से नीचे जाए, तो खेत की उत्तरी-पश्चिमी मेड़ पर शाम को धुआं करें अथवा घुलनशील गंधक 80% WDG 2.5 ग्राम/लीटर या 0.1% गंधक के तेजाब का हल्का छिड़काव करें।`;
+      audioText = `किसान साथी, सरसों में तेल की मात्रा बढ़ाने के लिए प्रति एकड़ 25 किलो सल्फर अवश्य डालें। सफेद रतुआ फफूंद दिखने पर रिडोमिल गोल्ड का छिड़काव करें और पाले से बचाव हेतु खेत की मेड़ पर धुआं करें।`;
+      keyActionPoints = [
+        'प्रति एकड़ 25-30 kg सल्फर डालकर तेल व दाने की चमक बढ़ाएं',
+        'सफेद रतुआ फफूंद हेतु रिडोमिल गोल्ड @ 2.5 g/L का छिड़काव करें',
+        'शीत लहर व पाला पड़ने पर खेत में हल्की सिंचाई या मेड़ पर धुआं करें',
+      ];
+      suggestedFollowUps = [
+        'सरसों में माहू (चेपा) का सबसे सस्ता देसी इलाज क्या है?',
+        'सरसों में दूसरा पानी किस अवस्था पर लगाना चाहिए?',
+      ];
+    } else {
+      response = `Mustard (Brassica juncea) Agronomy & Quality Protocol:\n\n1. Sulphur Nutrition for Oil Synthesis: Apply 25-30 kg/acre elemental bentonite sulphur (90%) basally or with first irrigation. Sulphur boosts glucosinolate profile and elevates seed oil concentration by 3-4%.\n2. White Rust (Albugo candida): At first appearance of white blistering pustules beneath foliage, spray Metalaxyl 8% + Mancozeb 64% WP (Ridomil Gold) @ 2.5 g/L.\n3. Radiation Frost Protection: When minimum temperatures drop below 4°C, maintain soil moisture with light evening irrigation and burn organic debris along windward boundaries to create a thermal smoke blanket.`;
+      audioText = `Farmer advisory: Boost mustard oil yield by applying 25 kg of bentonite sulphur per acre. Spray Ridomil Gold against white rust pustules and irrigate lightly to guard against frost.`;
+      keyActionPoints = [
+        'Apply 25-30 kg/acre bentonite sulphur to optimize oil percentage',
+        'Spray Ridomil Gold @ 2.5g/L immediately upon detecting white rust',
+        'Apply light night irrigation when temperatures threaten frost',
+      ];
+      suggestedFollowUps = [
+        'What is the safety interval for chemical sprays before harvesting greens?',
+        'How does spacing influence branching and pod formation in mustard?',
+      ];
+    }
+  }
+  // 16. Rice / Paddy Management, Blast & BPH (धान में झोंका रोग व भूरा माहू)
+  else if (
+    q.includes('धान') ||
+    q.includes('चावल') ||
+    q.includes('rice') ||
+    q.includes('paddy')
+  ) {
+    category = 'crop_advisory';
+    detectedTopic = 'Paddy Blast & Brown Plant Hopper Management (धान का झोंका व भूरा माहू)';
+    severity = 'high';
+    detectedCrop = 'Rice';
+    if (isHi) {
+      response = `धान (चावल) की फसल में प्रमुख रोगों एवं कीटों का वैज्ञानिक समाधान:\n\n1. झोंका रोग (Blast - Pyricularia oryzae):\n- पत्तियों पर आंख की पुतली जैसी नाव के आकार के धब्बे बनते हैं। गर्दन पर संक्रमण होने पर बालियां टूटकर लटक जाती हैं (Neck Blast)।\n- उपचार: ट्राइसाइक्लाजोल 75% WP (बाण/बीम) @ 120 ग्राम प्रति एकड़ या आइसोप्रोपियोलेन 40% EC @ 300 मिली प्रति एकड़ 200 लीटर पानी में छिड़कें।\n2. भूरा माहू (Brown Plant Hopper - BPH / हॉपर बर्न):\n- पौधे नीचे से सूखकर गोल घेरे में जलने जैसे लगते हैं।\n- उपचार: पायोमेट्रोजिन 50% WG (चेस) @ 120 ग्राम प्रति एकड़ या ट्राईफ्लूमेज़ोपिरिम 10% SC (पैक्सलोन) @ 94 मिली प्रति एकड़ का छिड़काव पौधों के तनों के निचले हिस्से पर करें।\n3. खैरा रोग (जिंक की कमी): बुवाई के 20-25 दिन बाद 5 किग्रा जिंक सल्फेट 21% + 2.5 किग्रा बुझा हुआ चूना 200 लीटर पानी में मिलाकर प्रति एकड़ स्प्रे करें।`;
+      audioText = `किसान मित्र, धान में झोंका रोग के लिए ट्राइसाइक्लाजोल का छिड़काव करें। भूरा माहू दिखने पर पायोमेट्रोजिन का छिड़काव पौधों की जड़ों व तनों पर केंद्रित करें। खैरा रोग हेतु जिंक सल्फेट व चूने का स्प्रे करें।`;
+      keyActionPoints = [
+        'झोंका रोग (Blast) के लिए ट्राइसाइक्लाजोल 75% WP @ 120 g/एकड़ छिड़कें',
+        'भूरा माहू (BPH) के लिए पायोमेट्रोजिन 50% WG @ 120 g/एकड़ तने पर डालें',
+        'खैरा रोग की रोकथाम हेतु जिंक सल्फेट 5kg + 2.5kg चूना का छिड़काव करें',
+      ];
+      suggestedFollowUps = [
+        'धान में बालियां निकलते समय पानी का स्तर कितना रखना चाहिए?',
+        'बासमती धान में झंडा रोग (बकाने रोग) की रोकथाम कैसे करें?',
+      ];
+    } else {
+      response = `Rice / Paddy Blast & Sucking Pest Management Protocol:\n\n1. Rice Blast (Pyricularia oryzae - Leaf & Neck Blast):\n- Spindle-shaped lesions with ash-grey centers. Apply Tricyclazole 75% WP (Beam) @ 120 g/acre OR Isoprothiolane 40% EC @ 300 ml/acre in 200L water.\n2. Brown Plant Hopper (BPH / Hopper Burn):\n- Concentrated hopper colonies at the base of tillers. Direct spray to the plant base using Pymetrozine 50% WG @ 120 g/acre OR Triflumezopyrim 10% SC @ 94 ml/acre.\n3. Khaira Disease (Zinc Deficiency Chlorosis):\n- Foliar spray of Zinc Sulphate (21%) @ 5 kg + 2.5 kg slaked lime in 200 liters water per acre at 20-25 days after transplanting.`;
+      audioText = `Paddy advisory: Treat blast lesions with Tricyclazole 75% WP. For brown plant hopper colonies at tiller bases, spray Pymetrozine or Triflumezopyrim directly onto the stem base.`;
+      keyActionPoints = [
+        'Spray Tricyclazole 75% WP @ 120g/acre for foliar and neck blast',
+        'Target BPH at the stem waterline with Pymetrozine 50% WG @ 120g/acre',
+        'Correct Khaira chlorosis with foliar Zinc Sulphate plus lime',
+      ];
+      suggestedFollowUps = [
+        'What is alternate wetting and drying (AWD) irrigation in rice?',
+        'How to identify bacterial leaf blight versus fungal sheath blight?',
+      ];
+    }
+  }
+  // 17. Tomato, Potato & Chilli Sucking Pests / Wilting (टमाटर, आलू, मिर्च उकठा व पोषण)
+  else if (
+    q.includes('टमाटर') ||
+    q.includes('tomato') ||
+    q.includes('मिर्च') ||
+    q.includes('chilli') ||
+    q.includes('chili')
+  ) {
+    category = 'crop_advisory';
+    detectedTopic = 'Solanaceous Crop Care: Wilt, Thrips & Fruit Quality (टमाटर व मिर्च प्रबंधन)';
+    severity = 'high';
+    detectedCrop = q.includes('मिर्च') || q.includes('chilli') || q.includes('chili') ? 'Chilli' : 'Tomato';
+    if (isHi) {
+      response = `टमाटर एवं मिर्च की फसल में बेहतर फलन और रोग-कीट नियंत्रण के उपाय:\n\n1. फूल और फल का झड़ना (Flower & Fruit Drop):\n- तापमान में अचानक उतार-चढ़ाव या बोरॉन की कमी से फूल झड़ते हैं।\n- उपचार: अल्फा नेफ्थाइल एसिटिक एसिड 4.5% SL (प्लानोफिक्स) 4 मिली प्रति 15 लीटर पानी के पंप में मिलाकर फूल आते समय छिड़कें। साथ में बोरॉन 20% @ 1 ग्राम/लीटर स्प्रे करें।\n2. उकठा रोग / विल्ट (Fusarium / Bacterial Wilt):\n- पौधे अचानक हरे के हरे सूख जाते हैं।\n- रोकथाम: कॉपर ऑक्सीक्लोराइड 50% WP @ 3 ग्राम/लीटर + स्ट्रेप्टोसाइक्लिन 1 ग्राम प्रति 10 लीटर पानी की दर से पौधों की जड़ों में ड्रेन्चिंग (Drenching) करें।\n3. फल सड़न एवं डाईबैक (Anthracnose / Fruit Rot):\n- एजोक्सीस्ट्रोबिन 18.2% + डाइफेनोकोनाजोल 11.4% SC (एमिस्टार टॉप) 1 मिली/लीटर पानी में घोलकर छिड़कें।`;
+      audioText = `किसान भाई, मिर्च और टमाटर में फूल झड़ने से रोकने के लिए बोरॉन और प्लानोफिक्स का छिड़काव करें। विल्ट रोग की रोकथाम के लिए कॉपर ऑक्सीक्लोराइड से जड़ों की ड्रेन्चिंग करें।`;
+      keyActionPoints = [
+        'फूल झड़ने से रोकने हेतु बोरॉन 20% @ 1g/L और प्लानोफिक्स का स्प्रे करें',
+        'उकठा रोग हेतु कॉपर ऑक्सीक्लोराइड + स्ट्रेप्टोसाइक्लिन से जड़ ड्रेन्चिंग करें',
+        'फल सड़न व डाईबैक के लिए एमिस्टार टॉप @ 1 ml/L का छिड़काव करें',
+      ];
+      suggestedFollowUps = [
+        'टमाटर में कैल्शियम की कमी से होने वाले काले धब्बों (Blossom End Rot) का क्या करें?',
+        'मिर्च में फल मक्खी (Fruit Fly) से बचाव के लिए फेरोमोन ट्रैप कैसे लगाएं?',
+      ];
+    } else {
+      response = `Tomato & Chilli Integrated Agronomy & Quality Protocol:\n\n1. Flower & Fruit Drop Prevention: Spray Alpha Naphthyl Acetic Acid (Planofix) @ 4 ml per 15-liter knapsack sprayer combined with Solubor (Boron 20%) @ 1 g/L at early flower cluster onset.\n2. Vascular Wilt Suppression (Bacterial & Fusarium Wilt): Drench root zones immediately with Copper Oxychloride 50% WP @ 3 g/L combined with Streptocycline @ 1 g per 10 liters of water.\n3. Anthracnose Dieback & Fruit Rot: Apply Azoxystrobin 18.2% + Difenoconazole 11.4% SC (Amistar Top) @ 1 ml/L.`;
+      audioText = `Vegetable grower guidance: Mitigate flower drop with foliar Boron and Planofix. At first signs of vascular wilt, drench plant crowns with Copper Oxychloride and Streptocycline.`;
+      keyActionPoints = [
+        'Foliar spray Boron 20% @ 1g/L to prevent blossom drop and cracking',
+        'Root drench Copper Oxychloride + Streptocycline for vascular wilt suppression',
+        'Apply Amistar Top @ 1ml/L against anthracnose dieback',
+      ];
+      suggestedFollowUps = [
+        'How to prevent blossom end rot using calcium nitrate?',
+        'What are the organic pheromone lure density rules for fruit fly?',
+      ];
+    }
+  }
+  // 18. Default Crop & Agronomy Consultation (विस्तृत विशेषज्ञ परामर्श)
   else {
     category = 'crop_advisory';
+    detectedTopic = 'General Agronomic Advisory & Crop Health';
+    severity = 'moderate';
     const targetCrop = crop || (districtObj?.major_crops?.[0] || 'गेहूं');
+    detectedCrop = targetCrop;
     if (isHi) {
       response = `प्रिय किसान साथी, आपकी कृषि संबंधी पूछताछ ("${query}") के संदर्भ में एग्रीसेतु की विशेषज्ञ सलाह:\n\n1. फसल प्रबंधन (${targetCrop}): संतुलित पोषण और समय पर कीट-रोग प्रबंधन से पैदावार में 25% तक की वृद्धि संभव है। किसी भी रासायनिक छिड़काव से पहले फसल की वास्तविक स्थिति और कीटों का आर्थिक नुकसान स्तर (ETL) जरूर देखें।\n2. मृदा व पोषक तत्व: अंधाधुंध रासायनिक खाद डालने की बजाय 3 साल में एक बार मिट्टी जांच अवश्य करवाएं और गोबर की खाद या वर्मीकम्पोस्ट का प्रयोग बढ़ाएं।\n3. सिंचाई व मौसम: हमेशा 5-दिवसीय स्थानीय मौसम पूर्वानुमान देखकर ही सिंचाई व छिड़काव की योजना बनाएं ताकि पानी व दवा का नुकसान न हो।\n\nआप किसी विशिष्ट कीट, रोग, खाद या सिंचाई के बारे में अधिक विस्तार से पूछ सकते हैं।`;
       audioText = `किसान मित्र, अपनी फसल की बेहतर पैदावार के लिए संतुलित पोषक तत्वों का प्रयोग करें और हमेशा मौसम पूर्वानुमान देखकर ही सिंचाई और दवा का छिड़काव करें।`;
@@ -2082,6 +2219,11 @@ function generateLocalWhisperAnswer(
     keyActionPoints,
     category,
     suggestedFollowUps,
+    detectedCrop,
+    detectedTopic,
+    severity,
+    confidencePercent: 95,
+    searchKeywords: [detectedCrop, category.replace('_', ' '), detectedTopic.split('(')[0].trim()].filter(Boolean),
     timestamp: new Date().toISOString(),
     meta: {
       modelUsed: 'AgriSetu Expert Agronomy Knowledge Base',
