@@ -1,0 +1,6 @@
+{
+  "name": "AgriSetu",
+  "description": "Real-time, localised agroadvisory, Whisper AI voice assistant, and crop disease diagnostic for Indian farmers using AI, weather forecasts, and soil health metrics.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
